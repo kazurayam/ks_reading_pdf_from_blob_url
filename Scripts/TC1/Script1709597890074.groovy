@@ -22,13 +22,7 @@ WebUI.verifyElementPresent(tObj, 10);
 String text = WebUI.getText(tObj)
 WebUI.comment(text)
 
-Pattern pattern = Pattern.compile("blob:(.*)")
-Matcher matcher = pattern.matcher(text)
-if (matcher.matches()) {
-	String httpsUrl = matcher.group(1)
-	WebUI.comment(httpsUrl)
-	downloadAndSave(httpsUrl, "./output/downloaded.pdf")
-}
+downloadAndSave(stripBlobScheme(text), "./output/downloaded.pdf")
 
 WebUI.closeBrowser()
 
@@ -42,11 +36,27 @@ TestObject makeTestObject(String id, String xpath) {
 }
 
 /**
+ * strip "blob:" prefix if there is 
+ */
+String stripBlobScheme(String url) {
+	Pattern pattern = Pattern.compile("blob:(.*)")
+	Matcher matcher = pattern.matcher(url)
+	if (matcher.matches()) {
+		return matcher.group(1)
+	} else {
+		return url
+	}
+}
+
+/**
  * 
  */
 Path downloadAndSave(String url, String outfile) {
 	Path file = Paths.get(outfile)
 	Files.createDirectories(file.getParent())
+	if (Files.exists(file)) {
+		Files.delete(file)
+	}
 	//
 	CloseableHttpClient client = HttpClientBuilder.create().build();
 	CloseableHttpResponse response = client.execute(new HttpGet(url));
